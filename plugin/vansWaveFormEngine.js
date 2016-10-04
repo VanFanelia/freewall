@@ -283,8 +283,6 @@ Freewall.createEngine({
 
         var maxHeight = calculateMaxHeight(runtime);
         runtime = shrinkGridTo(maxHeight, runtime);
-        console.log(runtime);
-        console.log(maxHeight);
 
         return runtime;
     }
