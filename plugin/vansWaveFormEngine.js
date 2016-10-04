@@ -178,6 +178,8 @@ Freewall.createEngine({
         function calculateHoles(runtime, items) {
             var holes = [];
             var firstSpaceFactor = 0.35;
+            //if this factor is too small some boxes will be removed because of missing space
+            var spaceCalculationFactor = 1; // default: 1.2
             var squarePixels = 0;
 
             for(var i in items) {
@@ -194,7 +196,7 @@ Freewall.createEngine({
             var maxHoleHeight = Math.floor(expectedHeight * firstSpaceFactor);
             // 4x |>   daraus folgt -> ungefähr + 2*maxHoleHeight um genug platz zu haben
             // calc new total height of box:
-            var expectedTotalHeight = expectedHeight + (2 * maxHoleHeight);
+            var expectedTotalHeight = expectedHeight + (spaceCalculationFactor * maxHoleHeight);
 
             //calculate expected columns:
             var expectedColumns = Math.floor(runtime.arguments[0] / runtime.cellW);
@@ -250,6 +252,41 @@ Freewall.createEngine({
 
         // calculate matrix
         runtime = runMatrixCalculation(items, runtime);
+
+        // removes empty lines
+        function calculateMaxHeight(runtime) {
+            var height = Math.floor(runtime.totalRow);
+            for(var r = height; r >= 0; r--) {
+                for(var c = 0; c < runtime.totalCol; c++) {
+                    if(runtime.matrix.hasOwnProperty(r+'-'+c) &&
+                        runtime.matrix[r+'-'+c].substring(0, 4) != 'hole')
+                    {
+                        return r;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        function shrinkGridTo(height, runtime) {
+            for(var r = runtime.totalRow; r > height; r--) {
+                for(var c = 0; c < runtime.totalCol; c++) {
+                    if(runtime.matrix.hasOwnProperty(r+'-'+c))
+                    {
+                        delete runtime.matrix[r+'-'+c];
+                    }
+                }
+            }
+            runtime.totalRow = height;
+            return runtime;
+        }
+
+        var maxHeight = calculateMaxHeight(runtime);
+        runtime = shrinkGridTo(maxHeight, runtime);
+        console.log(runtime);
+        console.log(maxHeight);
+
+        return runtime;
     }
 });
 
